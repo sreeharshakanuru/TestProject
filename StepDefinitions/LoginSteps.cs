@@ -2,6 +2,7 @@ using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using Reqnroll;
+using TestProject.Pages;
 
 namespace TestProject.StepDefinitions
 {
@@ -9,40 +10,43 @@ namespace TestProject.StepDefinitions
     public class LoginSteps
     {
         private IWebDriver _driver;
+        private AmazonPage _amazonPage;
+        private string _searchedProduct;
 
-        [Given("I am on the login page")]
-        public void GivenIAmOnTheLoginPage()
+        [Given("I have an Amazon web page")]
+        public void GivenIHaveAnAmazonWebPage()
         {
             _driver = new ChromeDriver();
-            _driver.Navigate().GoToUrl("https://example.com/login"); // Replace with actual URL
+            _amazonPage = new AmazonPage(_driver);
         }
 
-        [When("I enter username \"(.*)\" and password \"(.*)\"")]
-        public void WhenIEnterUsernameAndPassword(string username, string password)
+        [When("I go to the Amazon URL")]
+        public void WhenIGoToTheAmazonUrl()
         {
-            _driver.FindElement(By.Id("username")).SendKeys(username);
-            _driver.FindElement(By.Id("password")).SendKeys(password);
+            _amazonPage.NavigateToAmazon();
+            System.Threading.Thread.Sleep(2000); // Wait for page to load
         }
 
-        [When("I click the login button")]
-        public void WhenIClickTheLoginButton()
+        [When("I search for \"(.*)\"")]
+        public void WhenISearchFor(string productName)
         {
-            _driver.FindElement(By.Id("loginButton")).Click();
+            _searchedProduct = productName;
+            _amazonPage.SearchForProduct(productName);
+            System.Threading.Thread.Sleep(3000); // Wait for search results
         }
 
-        [Then("I should be redirected to the dashboard")]
-        public void ThenIShouldBeRedirectedToTheDashboard()
+        [When("I add the first product to the cart")]
+        public void WhenIAddTheFirstProductToTheCart()
         {
-            Assert.AreEqual("https://example.com/dashboard", _driver.Url); // Replace with actual URL
-            _driver.Quit();
+            _amazonPage.AddFirstProductToCart();
         }
 
-        [Then("I should see an error message \"(.*)\"")]
-        public void ThenIShouldSeeAnErrorMessage(string message)
+        [Then("I should verify the product is added in the cart")]
+        public void ThenIShouldVerifyTheProductIsAddedInTheCart()
         {
-            var errorElement = _driver.FindElement(By.ClassName("error"));
-            Assert.AreEqual(message, errorElement.Text);
-            _driver.Quit();
+            bool isProductInCart = _amazonPage.IsProductInCart(_searchedProduct);
+            Assert.IsTrue(isProductInCart, $"Product '{_searchedProduct}' was not found in the cart");
+            _amazonPage.CloseDriver();
         }
     }
 }
