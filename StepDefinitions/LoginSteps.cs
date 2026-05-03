@@ -1,48 +1,53 @@
 using NUnit.Framework;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
 using Reqnroll;
+using TestProject.Pages;
 
 namespace TestProject.StepDefinitions
 {
     [Binding]
     public class LoginSteps
     {
-        private IWebDriver _driver;
+        private IWebDriver? _driver;
+        private LoginPage? _loginPage;
+
+        [BeforeScenario]
+        public void Setup(ScenarioContext scenarioContext)
+        {
+            _driver = scenarioContext.Get<IWebDriver>("WebDriver");
+            _loginPage = new LoginPage(_driver);
+        }
 
         [Given("I am on the login page")]
         public void GivenIAmOnTheLoginPage()
         {
-            _driver = new ChromeDriver();
-            _driver.Navigate().GoToUrl("https://example.com/login"); // Replace with actual URL
+            _loginPage?.NavigateToLoginPage();
         }
 
         [When("I enter username \"(.*)\" and password \"(.*)\"")]
         public void WhenIEnterUsernameAndPassword(string username, string password)
         {
-            _driver.FindElement(By.Id("username")).SendKeys(username);
-            _driver.FindElement(By.Id("password")).SendKeys(password);
+            _loginPage?.Login(username, password);
         }
 
         [When("I click the login button")]
         public void WhenIClickTheLoginButton()
         {
-            _driver.FindElement(By.Id("loginButton")).Click();
+            _loginPage?.ClickLoginButton();
         }
 
         [Then("I should be redirected to the dashboard")]
         public void ThenIShouldBeRedirectedToTheDashboard()
         {
-            Assert.AreEqual("https://example.com/dashboard", _driver.Url); // Replace with actual URL
-            _driver.Quit();
+            var isDashboard = _loginPage?.IsOnDashboard() ?? false;
+            Assert.That(isDashboard, Is.True, "User should be redirected to dashboard");
         }
 
         [Then("I should see an error message \"(.*)\"")]
         public void ThenIShouldSeeAnErrorMessage(string message)
         {
-            var errorElement = _driver.FindElement(By.ClassName("error"));
-            Assert.AreEqual(message, errorElement.Text);
-            _driver.Quit();
+            var isErrorDisplayed = _loginPage?.IsErrorMessageDisplayed(message) ?? false;
+            Assert.That(isErrorDisplayed, Is.True, $"Error message '{message}' should be displayed");
         }
     }
 }
