@@ -1,13 +1,10 @@
-Feature: User Login
+Feature: Amazon Shopping Flow
 
-  Scenario: Successful login with valid credentials
-    Given I am on the login page
-    When I enter username "testuser" and password "password123"
-    And I click the login button
-    Then I should be redirected to the dashboard
-
-  Scenario: Failed login with invalid credentials
-    Given I am on the login page
-    When I enter username "invalid" and password "wrong"
-    And I click the login button
-    Then I should see an error message "Invalid credentials"
+  Scenario: Search for iPhone and verify cart contains the added item
+    Given I open the Amazon home page
+    When I search for "iphone17pro"
+    And I select the first iPhone from search results and add it to the cart
+    And I return to the Amazon home page
+    And I go to the cart
+    Then the cart should contain an item with text "iPhone"
+    And I close the browser

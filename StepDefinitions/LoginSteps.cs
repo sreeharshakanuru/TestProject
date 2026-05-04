@@ -1,53 +1,86 @@
 using NUnit.Framework;
 using OpenQA.Selenium;
 using Reqnroll;
+using TestProject.Common;
 using TestProject.Pages;
 
 namespace TestProject.StepDefinitions
 {
     [Binding]
-    public class LoginSteps
+    public class AmazonSteps
     {
         private IWebDriver? _driver;
-        private LoginPage? _loginPage;
+        private AmazonPage? _amazonPage;
 
         [BeforeScenario]
         public void Setup(ScenarioContext scenarioContext)
         {
-            _driver = scenarioContext.Get<IWebDriver>("WebDriver");
-            _loginPage = new LoginPage(_driver);
+            if (scenarioContext.TryGetValue("WebDriver", out IWebDriver driver))
+            {
+                _driver = driver;
+            }
+            else
+            {
+                try
+                {
+                    _driver = scenarioContext.Get<IWebDriver>("WebDriver");
+                }
+                catch (KeyNotFoundException ex)
+                {
+                    Console.WriteLine($"⚠️ WebDriver not found in ScenarioContext: {ex.Message}");
+                    throw;
+                }
+            }
+
+            if (_driver == null)
+            {
+                throw new InvalidOperationException("WebDriver could not be initialized for the scenario.");
+            }
+
+            _amazonPage = new AmazonPage(_driver);
         }
 
-        [Given("I am on the login page")]
-        public void GivenIAmOnTheLoginPage()
+        [Given("I open the Amazon home page")]
+        public void GivenIOpenTheAmazonHomePage()
         {
-            _loginPage?.NavigateToLoginPage();
+            _amazonPage?.NavigateToAmazonHomePage();
         }
 
-        [When("I enter username \"(.*)\" and password \"(.*)\"")]
-        public void WhenIEnterUsernameAndPassword(string username, string password)
+        [When("I search for \"(.*)\"")]
+        public void WhenISearchFor(string productName)
         {
-            _loginPage?.Login(username, password);
+            _amazonPage?.SearchForProduct(productName);
         }
 
-        [When("I click the login button")]
-        public void WhenIClickTheLoginButton()
+        [When("I select the first iPhone from search results and add it to the cart")]
+        public void WhenISelectTheFirstIPhoneFromSearchResultsAndAddItToTheCart()
         {
-            _loginPage?.ClickLoginButton();
+            _amazonPage?.SelectFirstIPhoneAndAddToCart();
         }
 
-        [Then("I should be redirected to the dashboard")]
-        public void ThenIShouldBeRedirectedToTheDashboard()
+        [When("I return to the Amazon home page")]
+        public void WhenIReturnToTheAmazonHomePage()
         {
-            var isDashboard = _loginPage?.IsOnDashboard() ?? false;
-            Assert.That(isDashboard, Is.True, "User should be redirected to dashboard");
+            _amazonPage?.ReturnToHomePage();
         }
 
-        [Then("I should see an error message \"(.*)\"")]
-        public void ThenIShouldSeeAnErrorMessage(string message)
+        [When("I go to the cart")]
+        public void WhenIGoToTheCart()
         {
-            var isErrorDisplayed = _loginPage?.IsErrorMessageDisplayed(message) ?? false;
-            Assert.That(isErrorDisplayed, Is.True, $"Error message '{message}' should be displayed");
+            _amazonPage?.GoToCart();
+        }
+
+        [Then("the cart should contain an item with text \"(.*)\"")]
+        public void ThenTheCartShouldContainAnItemWithText(string expectedText)
+        {
+            var itemFound = _amazonPage?.IsProductInCart(expectedText) ?? false;
+            Assert.That(itemFound, Is.True, $"Expected cart to contain an item with text '{expectedText}'");
+        }
+
+        [Then("I close the browser")]
+        public void ThenICloseBrowser()
+        {
+            _amazonPage?.CloseBrowser();
         }
     }
 }
