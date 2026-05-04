@@ -31,17 +31,17 @@ namespace TestProject.Hooks
             Console.WriteLine("═════════════════════════════════════════");
         }
 
-        [BeforeScenario]
+        [BeforeScenario(Order = 0)]
         public void BeforeScenario(ScenarioContext scenarioContext)
         {
             _driver = WebDriverSetup.CreateChromeDriver();
             scenarioContext.Set(_driver, "WebDriver");
 
             Console.WriteLine($"\n📝 Scenario: {scenarioContext.ScenarioInfo.Title}");
-            Console.WriteLine("🌐 WebDriver initialized");
+            Console.WriteLine("🌐 Chrome browser launched for scenario");
         }
 
-        [AfterScenario]
+        [AfterScenario(Order = 100)]
         public void AfterScenario(ScenarioContext scenarioContext)
         {
             HandleScenarioCompletion(scenarioContext);
@@ -75,7 +75,7 @@ namespace TestProject.Hooks
 
         private void TakeFailureScreenshot(IWebDriver driver, ScenarioContext scenarioContext)
         {
-            Console.WriteLine("❌ Scenario failed");
+            Console.WriteLine("❌ Scenario failed, capturing screenshot...");
             ScreenshotHelper.TakeScreenshotOnFailure(driver, scenarioContext.ScenarioInfo.Title);
         }
 
