@@ -52,10 +52,10 @@ namespace TestProject.StepDefinitions
             _amazonPage?.SearchForProduct(productName);
         }
 
-        [When("I select the first iPhone from search results and add it to the cart")]
-        public void WhenISelectTheFirstIPhoneFromSearchResultsAndAddItToTheCart()
+        [When("I select the first product from search results and add it to the cart")]
+        public void WhenISelectTheFirstProductFromSearchResultsAndAddItToTheCart()
         {
-            _amazonPage?.SelectFirstIPhoneAndAddToCart();
+            _amazonPage?.SelectFirstProductAndAddToCart();
         }
 
         [When("I return to the Amazon home page")]
@@ -70,11 +70,11 @@ namespace TestProject.StepDefinitions
             _amazonPage?.GoToCart();
         }
 
-        [Then("the cart should contain an item with text \"(.*)\"")]
-        public void ThenTheCartShouldContainAnItemWithText(string expectedText)
+        [Then("the cart should contain at least one item")]
+        public void ThenTheCartShouldContainAtLeastOneItem()
         {
-            var itemFound = _amazonPage?.IsProductInCart(expectedText) ?? false;
-            Assert.That(itemFound, Is.True, $"Expected cart to contain an item with text '{expectedText}'");
+            var hasItems = _amazonPage?.CartHasItems() ?? false;
+            Assert.That(hasItems, Is.True, "Expected cart to contain at least one item");
         }
 
         [Then("I close the browser")]

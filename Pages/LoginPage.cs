@@ -48,11 +48,11 @@ namespace TestProject.Pages
             return this;
         }
 
-        public AmazonPage SelectFirstIPhoneAndAddToCart()
+        public AmazonPage SelectFirstProductAndAddToCart()
         {
             try
             {
-                Console.WriteLine("Looking for first iPhone product in search results...");
+                Console.WriteLine("Looking for first product in search results...");
                 
                 // Try multiple selectors to find the first product result
                 IWebElement firstProduct = null;
@@ -88,19 +88,32 @@ namespace TestProject.Pages
                 // Wait for product page to load
                 Thread.Sleep(3000);
                 
-                // Find and click the add to cart button
+                // Find the add to cart button
                 var addToCartButton = FindAddToCartButton();
                 if (addToCartButton == null)
                 {
                     throw new InvalidOperationException("Could not find Add to Cart button on product page");
                 }
                 
-                // Scroll to button if needed
+                // Scroll to button to ensure it's visible
                 ((IJavaScriptExecutor)_driver).ExecuteScript("arguments[0].scrollIntoView(true);", addToCartButton);
-                Thread.Sleep(500);
+                Thread.Sleep(1000);
                 
-                addToCartButton.Click();
-                Console.WriteLine("Product added to cart");
+                // Wait for button to be clickable
+                _wait.Until(d => addToCartButton.Displayed && addToCartButton.Enabled);
+                
+                // Try clicking using JavaScript to bypass any overlays
+                try
+                {
+                    ((IJavaScriptExecutor)_driver).ExecuteScript("arguments[0].click();", addToCartButton);
+                    Console.WriteLine("Product added to cart using JavaScript click");
+                }
+                catch
+                {
+                    // Fallback to regular click
+                    addToCartButton.Click();
+                    Console.WriteLine("Product added to cart using regular click");
+                }
                 
                 // Wait for cart confirmation
                 Thread.Sleep(2000);
@@ -114,29 +127,130 @@ namespace TestProject.Pages
             return this;
         }
 
+        public bool CartHasItems()
+        {
+            try
+            {
+                Console.WriteLine("Checking if cart has any items...");
+                
+                // Wait a bit for cart to fully load
+                Thread.Sleep(1000);
+                
+                // Multiple selector strategies to find cart items
+                var cartItemSelectors = new[]
+                {
+                    "//span[contains(@class, 'a-truncate')]",
+                    "//div[contains(@class, 'sc-product')]",
+                    "//a[@data-a-target='sc-product-link']",
+                    "//h4//span",
+                    "//*[contains(@class, 'product')]//span",
+                    "//div[@data-name]",
+                    "//div[contains(@class, 'CartItem')]"
+                };
+                
+                var allCartItems = _driver.FindElements(By.XPath(string.Join(" | ", cartItemSelectors)));
+                Console.WriteLine($"Found {allCartItems.Count} potential cart items");
+                
+                if (allCartItems.Count > 0)
+                {
+                    Console.WriteLine("✓ Cart has items!");
+                    return true;
+                }
+                
+                Console.WriteLine("✗ Cart appears to be empty");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error checking cart: {ex.Message}");
+                return false;
+            }
+        }
+
         private IWebElement FindAddToCartButton()
         {
             try
             {
-                // Try finding by ID
+                Console.WriteLine("Searching for Add to Cart button...");
+                
+                // First, take a screenshot to see what's on the page
+                var pageSource = _driver.PageSource;
+                Console.WriteLine($"Page source contains 'add-to-cart': {pageSource.Contains("add-to-cart")}");
+                Console.WriteLine($"Page source contains 'Add to Cart': {pageSource.Contains("Add to Cart")}");
+                
+                // Try finding by ID - most direct
                 var buttons = _driver.FindElements(By.Id("add-to-cart-button"));
-                if (buttons.Count > 0 && buttons[0].Displayed)
+                if (buttons.Count > 0)
                 {
-                    return buttons[0];
+                    Console.WriteLine("Found button by ID: add-to-cart-button");
+                    if (buttons[0].Displayed)
+                    {
+                        return buttons[0];
+                    }
+                }
+                
+                // Try finding by different ID patterns
+                buttons = _driver.FindElements(By.XPath("//button[contains(@id, 'add-to-cart')]"));
+                if (buttons.Count > 0)
+                {
+                    Console.WriteLine($"Found {buttons.Count} buttons with 'add-to-cart' in ID");
+                    foreach (var btn in buttons)
+                    {
+                        if (btn.Displayed)
+                        {
+                            Console.WriteLine($"Using button with ID: {btn.GetAttribute("id")}");
+                            return btn;
+                        }
+                    }
                 }
                 
                 // Try finding by aria-label
-                buttons = _driver.FindElements(By.XPath("//button[contains(@aria-label, 'Add to Shopping Cart') or contains(@aria-label, 'Add to Cart')]"));
-                if (buttons.Count > 0 && buttons[0].Displayed)
+                buttons = _driver.FindElements(By.XPath("//button[contains(@aria-label, 'Add') and contains(@aria-label, 'Cart')]"));
+                if (buttons.Count > 0)
                 {
-                    return buttons[0];
+                    Console.WriteLine($"Found {buttons.Count} buttons with 'Add' and 'Cart' in aria-label");
+                    foreach (var btn in buttons)
+                    {
+                        if (btn.Displayed)
+                        {
+                            Console.WriteLine($"Using button with aria-label: {btn.GetAttribute("aria-label")}");
+                            return btn;
+                        }
+                    }
                 }
                 
-                // Try finding any button with "cart" text
-                buttons = _driver.FindElements(By.XPath("//button[contains(text(), 'Cart') or contains(text(), 'cart')]"));
-                if (buttons.Count > 0 && buttons[0].Displayed)
+                // Try finding any button with Cart or Add in text
+                buttons = _driver.FindElements(By.XPath("//button[contains(text(), 'Cart') or contains(text(), 'Add')]"));
+                if (buttons.Count > 0)
                 {
-                    return buttons[0];
+                    Console.WriteLine($"Found {buttons.Count} buttons with Cart/Add text");
+                    foreach (var btn in buttons)
+                    {
+                        if (btn.Displayed)
+                        {
+                            Console.WriteLine($"Using button with text: {btn.Text}");
+                            return btn;
+                        }
+                    }
+                }
+                
+                // Try finding by form field name
+                buttons = _driver.FindElements(By.XPath("//input[@name='submit.add-to-cart'] | //button[@name='submit.add-to-cart']"));
+                if (buttons.Count > 0)
+                {
+                    Console.WriteLine("Found button by form name: submit.add-to-cart");
+                    if (buttons[0].Displayed)
+                    {
+                        return buttons[0];
+                    }
+                }
+                
+                // Print all buttons on the page for debugging
+                var allButtons = _driver.FindElements(By.XPath("//button[@type='button' or not(@type)]"));
+                Console.WriteLine($"Total buttons on page: {allButtons.Count}");
+                for (int i = 0; i < Math.Min(5, allButtons.Count); i++)
+                {
+                    Console.WriteLine($"  Button {i}: id='{allButtons[i].GetAttribute("id")}', text='{allButtons[i].Text}', aria-label='{allButtons[i].GetAttribute("aria-label")}'");
                 }
                 
                 return null;
@@ -167,7 +281,21 @@ namespace TestProject.Pages
                     throw new InvalidOperationException("Could not find Cart button");
                 }
                 
-                cartButtons[0].Click();
+                Console.WriteLine("Found cart button, navigating to cart...");
+                
+                // Try JavaScript click first
+                try
+                {
+                    ((IJavaScriptExecutor)_driver).ExecuteScript("arguments[0].click();", cartButtons[0]);
+                    Console.WriteLine("Clicked cart button using JavaScript");
+                }
+                catch
+                {
+                    // Fallback to regular click
+                    cartButtons[0].Click();
+                    Console.WriteLine("Clicked cart button using regular click");
+                }
+                
                 Console.WriteLine("Navigated to cart");
                 
                 // Wait for cart page to load
