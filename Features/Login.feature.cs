@@ -109,13 +109,13 @@ namespace TestProject.Features
         }
         
         [global::NUnit.Framework.TestAttribute()]
-        [global::NUnit.Framework.DescriptionAttribute("Search for iPhone and verify cart contains the added item")]
-        public async global::System.Threading.Tasks.Task SearchForIPhoneAndVerifyCartContainsTheAddedItem()
+        [global::NUnit.Framework.DescriptionAttribute("Search for a phone and verify cart contains the added item")]
+        public async global::System.Threading.Tasks.Task SearchForAPhoneAndVerifyCartContainsTheAddedItem()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             string pickleIndex = "0";
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Search for iPhone and verify cart contains the added item", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("Search for a phone and verify cart contains the added item", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
             string[] tagsOfRule = ((string[])(null));
             global::Reqnroll.RuleInfo ruleInfo = null;
 #line 3
@@ -132,10 +132,10 @@ namespace TestProject.Features
     await testRunner.GivenAsync("I open the Amazon home page", ((string)(null)), ((global::Reqnroll.Table)(null)), "Given ");
 #line hidden
 #line 5
-    await testRunner.WhenAsync("I search for \"iphone17pro\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
+    await testRunner.WhenAsync("I search for \"phone\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "When ");
 #line hidden
 #line 6
-    await testRunner.AndAsync("I select the first iPhone from search results and add it to the cart", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
+    await testRunner.AndAsync("I select the first product from search results and add it to the cart", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 7
     await testRunner.AndAsync("I return to the Amazon home page", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
@@ -144,7 +144,7 @@ namespace TestProject.Features
     await testRunner.AndAsync("I go to the cart", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
 #line hidden
 #line 9
-    await testRunner.ThenAsync("the cart should contain an item with text \"iPhone\"", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
+    await testRunner.ThenAsync("the cart should contain at least one item", ((string)(null)), ((global::Reqnroll.Table)(null)), "Then ");
 #line hidden
 #line 10
     await testRunner.AndAsync("I close the browser", ((string)(null)), ((global::Reqnroll.Table)(null)), "And ");
